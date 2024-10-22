@@ -1,9 +1,4 @@
-import yfinance as yf
+from Services.stock import get_stock_price
 
-msft = yf.Ticker("MSFT")
 
-info = msft.info
-
-current_price = info.get('currentPrice')
-
-print(f"Current price of MSFT: {current_price}")
+print(get_stock_price('MSFT'))
