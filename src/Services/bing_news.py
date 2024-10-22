@@ -17,6 +17,9 @@ def search_bing_news(search_term):
 
     if not subscription_key:
         raise ValueError("BING_SEARCH_API_KEY environment variable is not set")
+    
+    if not endpoint:
+        raise ValueError("BING_SEARCH_ENDPOINT environment variable is not set")
 
     try:
         client = NewsSearchClient(endpoint=endpoint, credentials=CognitiveServicesCredentials(subscription_key))
