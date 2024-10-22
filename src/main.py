@@ -1,4 +1,5 @@
-from Services.stock import get_stock_price
+from dotenv import load_dotenv
+from Services.bing_news import search_bing_news
 
+load_dotenv()
 
-print(get_stock_price('MSFT'))
