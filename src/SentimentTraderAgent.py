@@ -14,6 +14,7 @@ from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_
 
 from Services.stock import Stock
 from Services.bing_news import BingNews
+from Prompts import Recomend_Stonks
 
 class AzureOpenAIClient:
     def __init__(self, endpoint: str):
@@ -47,7 +48,7 @@ class AzureOpenAIClient:
         # Enable planning
         self.execution_settings = OpenAIChatPromptExecutionSettings(
             service_id="chat",
-            max_tokens=2000,
+            max_tokens=4096,
             temperature=0.7,
             top_p=0.8,
             function_choice_behavior="auto",
@@ -56,6 +57,7 @@ class AzureOpenAIClient:
 
         # Create a history of the conversation
         self.history = ChatHistory()
+        self.history.add_system_message(Recomend_Stonks)
     
         
         # self.client = AzureOpenAI(
@@ -96,6 +98,7 @@ class AzureOpenAIClient:
         str: The response from the AI.
         """
         self.history.add_user_message(message)
+        
 
         async def get_response():
             return await self.chat_completion.get_chat_message_content(
@@ -118,5 +121,5 @@ class AzureOpenAIClient:
             else:
                 raise
 
-        # self.history.add_user_message(result)
+        self.history.add_message(result)
         return str(result)

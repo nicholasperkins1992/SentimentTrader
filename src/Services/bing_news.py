@@ -11,7 +11,7 @@ class BingNews:
     """
     @kernel_function(
         name="get_current_news",
-        description="Get the current headlines and urls to articles related to a search term. This method only takes in a search term. For example, when a customer asks 'What is the news about Microsoft?'",
+        description="Get the current headlines, description, and urls to articles related to a search term. This method only takes in a search term. For example, when a customer asks 'What is the news about Microsoft?'",
     )
     def get_current_news(self, search_term) -> Annotated[list, "the output is a list"]:
         """
