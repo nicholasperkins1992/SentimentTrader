@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 from SentimentTraderAgent import AzureOpenAIClient
-from Services.bing_news import search_bing_news
 
 load_dotenv()
 

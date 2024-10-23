@@ -13,6 +13,7 @@ from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_
 )
 
 from Services.stock import Stock
+from Services.bing_news import BingNews
 
 class AzureOpenAIClient:
     def __init__(self, endpoint: str):
@@ -36,6 +37,11 @@ class AzureOpenAIClient:
         self.kernel.add_plugin(
             Stock(),
             plugin_name="Stock",
+        )
+        
+        self.kernel.add_plugin(
+            BingNews(),
+            plugin_name="BingNews",
         )
         
         # Enable planning
