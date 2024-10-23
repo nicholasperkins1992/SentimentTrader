@@ -7,6 +7,7 @@ from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_
     OpenAIChatPromptExecutionSettings,
 )
 from Services.stock import Stock
+from Services.trader import Trader
 from Services.bing_news import BingNews
 from Prompts import Recomend_Stonks
 
@@ -37,6 +38,11 @@ class AzureOpenAIClient:
         self.kernel.add_plugin(
             BingNews(),
             plugin_name="BingNews",
+        )
+
+        self.kernel.add_plugin(
+            Trader(),
+            plugin_name="Trader",
         )
         
         # Kernel settings
