@@ -1,17 +1,11 @@
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import AzureOpenAI  
 import asyncio
-
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
-from semantic_kernel.connectors.ai.chat_completion_client_base import ChatCompletionClientBase
 from semantic_kernel.contents.chat_history import ChatHistory
-from semantic_kernel.functions.kernel_arguments import KernelArguments
-
 from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_prompt_execution_settings import (
     OpenAIChatPromptExecutionSettings,
 )
-
 from Services.stock import Stock
 from Services.bing_news import BingNews
 from Prompts import Recomend_Stonks
@@ -26,7 +20,6 @@ class AzureOpenAIClient:
         self.kernel = Kernel()
 
         # Add Azure OpenAI chat completion
-        
         self.chat_completion = AzureChatCompletion(
             deployment_name="ip-gpt-4o",
             ad_token_provider=self.token_provider,
@@ -35,6 +28,7 @@ class AzureOpenAIClient:
         
         self.kernel.add_service(self.chat_completion)
         
+        # Add the plugins
         self.kernel.add_plugin(
             Stock(),
             plugin_name="Stock",
@@ -45,7 +39,7 @@ class AzureOpenAIClient:
             plugin_name="BingNews",
         )
         
-        # Enable planning
+        # Kernel settings
         self.execution_settings = OpenAIChatPromptExecutionSettings(
             service_id="chat",
             max_tokens=4096,
@@ -57,37 +51,10 @@ class AzureOpenAIClient:
 
         # Create a history of the conversation
         self.history = ChatHistory()
+        #Add the prompt to the history
         self.history.add_system_message(Recomend_Stonks)
-    
         
-        # self.client = AzureOpenAI(
-        #     api_version="2024-08-01-preview",
-        #     azure_endpoint=self.endpoint, #https://ai-daschollai303201498064.openai.azure.com
-        #     azure_ad_token_provider=self.token_provider
-        # )
-        
-    #     self.tools = [
-    #     {
-    #         "type": "function",
-    #         "function": {
-    #             "name": "get_stock_price",
-    #             "description": "Get the current stock price of a company in USD, this method only takes in a ticker name. for example when a customer asks 'Where is the price of Microsoft'",
-    #             "parameters": {
-    #                 "type": "object",
-    #                 "properties": {
-    #                     "ticker": {
-    #                         "type": "string",
-    #                         "description": "The ticker symbol of the company."
-    #                     }
-    #                 },
-    #                 "required": ["ticker"],
-    #                 "additionalProperties": False
-    #             }
-    #         }
-    #     }
-    # ]
-        
-    def call_openai(self, message: str):
+    def Execute_Agent(self, message: str):
         """
         Get the response from the AI.
 

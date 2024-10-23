@@ -15,7 +15,7 @@ while True:
             break
         
         # Call the call_openai method with the user input
-        response = azure_client.call_openai(user_input)
+        response = azure_client.Execute_Agent(user_input)
         
         # Print the response
         print(response)
