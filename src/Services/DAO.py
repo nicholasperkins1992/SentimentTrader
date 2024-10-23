@@ -1,8 +1,9 @@
+import os
 import pandas as pd
 from datetime import datetime
 
-CASH_POSITION_FILE = 'Cash_Position.csv'
-STOCK_POSITION_FILE = 'Stock_Position.csv'
+CASH_POSITION_FILE = os.getenv("CASH_POSITION_FILE")
+STOCK_POSITION_FILE = os.getenv("STOCK_POSITION_FILE")
 
 def save_cash_position(cash_balance):
     data = {
