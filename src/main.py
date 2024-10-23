@@ -4,7 +4,7 @@ from Services.bing_news import search_bing_news
 
 load_dotenv()
 
-azure_client = AzureOpenAIClient(endpoint="https://ai-daschollai303201498064.openai.azure.com")
+azure_client = AzureOpenAIClient(endpoint="https://ai-daschollai303201498064.openai.azure.com/openai/")
 
 while True:
         # Take input from the user

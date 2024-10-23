@@ -1,6 +1,9 @@
 import os
 from azure.cognitiveservices.search.newssearch import NewsSearchClient
 from msrest.authentication import CognitiveServicesCredentials
+from typing import Annotated
+from semantic_kernel.functions import kernel_function
+
 
 def search_bing_news(search_term):
     """

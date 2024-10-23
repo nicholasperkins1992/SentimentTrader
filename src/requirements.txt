@@ -5,3 +5,4 @@ openai==1.52.0
 azure-cognitiveservices-search-newssearch==2.0.0
 python-dotenv==1.0.1
 yfinance=0.2.46
+semantic-kernel=1.11.0
