@@ -28,7 +28,6 @@ class Stock:
         info = company.info
         return str(info.get('currentPrice'))
     
-    
     # @kernel_function(
     #     name="get_text_from_url",
     #     description="Get the text content from a URL. This method only takes in a URL. For example, when a customer asks 'What is the content of this URL?'",
