@@ -33,7 +33,6 @@ class Trader:
             raise Exception("No cash balance available.")
         
         price_per_share = float(self.stock_instance.get_stock_price(symbol))
-        #stock.get_stock_price_internel(symbol)
 
         total_cost = price_per_share * quantity
         
