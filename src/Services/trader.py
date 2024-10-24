@@ -2,12 +2,14 @@ import json
 import pandas as pd
 from datetime import datetime
 from Services import DAO
-from Services import stock
+from Services.stock import Stock
 from typing import Annotated
 from semantic_kernel.functions import kernel_function
 
 class Trader: 
     
+    stock_instance = Stock()
+
     @kernel_function(
         name="buy_stock",
         description="Purchase stock based on stock ticker symbol, trading price and quantity, for example 'Buy 10 shares of Apple at $150 each.'",
@@ -30,7 +32,8 @@ class Trader:
         if cash_balance is None:
             raise Exception("No cash balance available.")
         
-        price_per_share = stock.get_stock_price_noKernel(symbol)
+        price_per_share = float(self.stock_instance.get_stock_price(symbol))
+        #stock.get_stock_price_internel(symbol)
 
         total_cost = price_per_share * quantity
         
@@ -94,7 +97,7 @@ class Trader:
                 shares_to_sell -= quantity
 
         # Step 3: Update cash position CSV by adding the sale proceeds
-        sellingPrice = stock.get_stock_price_noKernel(symbol)
+        sellingPrice = float(self.stock_instance.get_stock_price(symbol))
         sale_proceeds = quantityToSell * sellingPrice
 
         current_cash = DAO.get_remaining_cash()  # Get the current cash balance
