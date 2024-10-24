@@ -5,10 +5,7 @@ from typing import Annotated
 from Services import DAO
 from semantic_kernel.functions import kernel_function
 
-# CASH_POSITION_FILE = os.getenv("CASH_POSITION_FILE")
-# STOCK_POSITION_FILE = os.getenv("STOCK_POSITION_FILE")
-CASH_POSITION_FILE = "CASH_POSITION_FILE"
-STOCK_POSITION_FILE = "STOCK_POSITION_FILE"
+CASH_POSITION_FILE = os.getenv("CASH_POSITION_FILE")
 
 class AccountManager: 
     
@@ -17,7 +14,7 @@ class AccountManager:
     
     @kernel_function(
         name="deposit_cash",
-        description="Deposit a specified amount of cash into the account, updating the cash balance in the CSV file."
+        description="Deposit a specified amount of cash into the the customers account, an example is 'Deposit $1000 into my account.'"
     )
     def deposit_cash(self, amount: float):
         """
@@ -36,7 +33,7 @@ class AccountManager:
             DAO.init_cash_position()
         try:
             current_balance = DAO.get_remaining_cash()
-            print(f"aaaaaCurrent balance: {current_balance}")
+            # print(f"aaaaaCurrent balance: {current_balance}")
 
         except (FileNotFoundError, IndexError):
             current_balance = 0
@@ -44,12 +41,12 @@ class AccountManager:
         new_balance = current_balance + amount
         DAO.save_cash_position(new_balance)
         
-        print(f"Deposited ${amount:.2f} into the account. New balance: ${new_balance:.2f}")
+        # print(f"Deposited ${amount:.2f} into the account. New balance: ${new_balance:.2f}")
 
 
     @kernel_function(
         name="withdraw_cash",
-        description="Withdraw a specified amount of cash from the account, updating the cash balance in the CSV file."
+        description="Withdraw a specified amount of cash from the customers account, and example is 'Withdraw $500 from my account'."
     )
     def withdraw_cash(self, amount: float):
         """
@@ -76,15 +73,16 @@ class AccountManager:
         new_balance = current_balance - amount
         DAO.save_cash_position(new_balance)
         
-        print(f"Withdrew ${amount:.2f} from the account. New balance: ${new_balance:.2f}")
+        # print(f"Withdrew ${amount:.2f} from the account. New balance: ${new_balance:.2f}")
 
     @kernel_function(
     name="show_cash",
-    description="show cash balance (cash position) in CSV."
+    description="View the customers cash balance (cash position) in their account, an example is 'Show my cash balance'."
     )
-    def show_cash_balance(self):
+    def show_cash_balance(self) -> Annotated[float, "the output is a float"]:
         """
         show cash balance.
         """
         current_balance = DAO.get_remaining_cash()
-        print(f"aaaaaCurrent balance: {current_balance}")
+        return current_balance
+        # print(f"aaaaaCurrent balance: {current_balance}")

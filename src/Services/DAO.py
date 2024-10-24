@@ -2,8 +2,8 @@ import os
 import pandas as pd
 from datetime import datetime
 
-CASH_POSITION_FILE = "CASH_POSITION_FILE"
-STOCK_POSITION_FILE = "STOCK_POSITION_FILE"
+CASH_POSITION_FILE = os.getenv("CASH_POSITION_FILE")
+STOCK_POSITION_FILE = os.getenv("STOCK_POSITION_FILE")
 
 def save_cash_position(cash_balance):
     data = {
@@ -16,7 +16,7 @@ def save_cash_position(cash_balance):
 def get_remaining_cash():
     try:
         cash_data = pd.read_csv(CASH_POSITION_FILE)
-        print(cash_data['cash_balance'].iloc[-1])
+        # print(cash_data['cash_balance'].iloc[-1])
         return cash_data['cash_balance'].iloc[-1]
     except FileNotFoundError:
         return 0  
@@ -44,7 +44,12 @@ def update_stock_position(trading_date, symbol, new_quantity, buying_price):
 
 def get_stock_position(symbol):
     try:
-        stock_data = pd.read_csv(STOCK_POSITION_FILE)
+        dtype = {
+            'quantity': int,
+            'buying_price': float,
+            # Add other columns as needed
+        }
+        stock_data = pd.read_csv(STOCK_POSITION_FILE, dtype=dtype)
         stock = stock_data[stock_data['symbol'] == symbol]
         if not stock.empty:
             return stock  
@@ -68,16 +73,12 @@ def delete_stock_position(trading_date, symbol):
     df.to_csv(STOCK_POSITION_FILE, index=False)
 
 def init_cash_position():
-    if not os.path.exists(CASH_POSITION_FILE):
-        data = {'date': [pd.Timestamp.now().strftime('%Y-%m-%d')], 'cash_balance': [0.00]}  # Initial balance $0
-        df = pd.DataFrame(data)
-        df.to_csv(CASH_POSITION_FILE, index=False)
-        print(f"Initialized {CASH_POSITION_FILE} with $0 balance.")
-    else:
-        print(f"{CASH_POSITION_FILE} already exists.")
+    data = {'date': [pd.Timestamp.now().strftime('%Y-%m-%d')], 'cash_balance': [0.00]}  # Initial balance $0
+    df = pd.DataFrame(data)
+    df.to_csv(CASH_POSITION_FILE, index=False)
 
 def init_stock_position():
     data = {'trading_date': [], 'symbol': [], 'quantity': [], 'buying_price': []}
     df = pd.DataFrame(data)
     df.to_csv(STOCK_POSITION_FILE, index=False)
-    print(f"Initialized {STOCK_POSITION_FILE} as an empty file.")
+    # print(f"Initialized {STOCK_POSITION_FILE} as an empty file.")

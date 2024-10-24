@@ -18,4 +18,4 @@ while True:
         response = azure_client.Execute_Agent(user_input)
         
         # Print the response
-        print(response)
+        print("Assistant>" + response)

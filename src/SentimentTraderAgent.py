@@ -1,3 +1,4 @@
+import os
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 import asyncio
 from semantic_kernel import Kernel
@@ -6,24 +7,25 @@ from semantic_kernel.contents.chat_history import ChatHistory
 from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_prompt_execution_settings import (
     OpenAIChatPromptExecutionSettings,
 )
-from Services.stock import Stock
-from Services.trader import Trader
-from Services.bing_news import BingNews
 from Services.account_manager import AccountManager
-from Prompts import Recomend_Stonks
+from Services.stock import Stock
+from Services.bing_news import BingNews
+from Prompts import Recomend_Stonks, Buy_Sell_Stonks
+from Services.trader import Trader
 
 class AzureOpenAIClient:
     def __init__(self, endpoint: str):
         self.endpoint = endpoint
         self.credential = DefaultAzureCredential()
         self.token_provider = get_bearer_token_provider(DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default")
+        self.deployment_name = os.getenv("AzureAi_Deployment_Name")
         
         # Initialize the kernel
         self.kernel = Kernel()
 
         # Add Azure OpenAI chat completion
         self.chat_completion = AzureChatCompletion(
-            deployment_name="ip-gpt-4o",
+            deployment_name=self.deployment_name,
             ad_token_provider=self.token_provider,
             base_url=endpoint,
         )
@@ -64,7 +66,7 @@ class AzureOpenAIClient:
         # Create a history of the conversation
         self.history = ChatHistory()
         #Add the prompt to the history
-        self.history.add_system_message(Recomend_Stonks)
+        self.history.add_system_message(Buy_Sell_Stonks)
         
     def Execute_Agent(self, message: str):
         """
