@@ -47,7 +47,7 @@ class Trader:
         name="sell_stock",
         description="sell stock",
     )
-    def sell_stock(self, symbol: str, quantityToSell: int, sellingPrice: float) -> Annotated[None, "No return value"]:
+    def sell_stock(self, symbol: str, quantityToSell: int, sellingPrice: float):
         """
         Sell the specified quantity of stock using FIFO (first in, first out) principle.
 
@@ -60,7 +60,7 @@ class Trader:
         Exception: If there are not enough shares available to sell.
         """
         # Step 1: Check if enough stock is available
-        stock_positions = self.dao.get_stock_position(symbol)
+        stock_positions = DAO.get_stock_position(symbol)
         total_quantity = sum([row['quantity'] for row in stock_positions])
 
         if total_quantity < quantityToSell:
@@ -92,7 +92,7 @@ class Trader:
 
         current_cash = DAO.get_remaining_cash()  # Get the current cash balance
         new_cash_position = current_cash + sale_proceeds
-        DAO.update_cash_position(new_cash_position)
+        DAO.save_cash_position(new_cash_position)
 
         print(f"Sold {quantityToSell} shares of {symbol} at ${sellingPrice:.2f} per share. Cash position updated.")
         
@@ -100,23 +100,36 @@ class Trader:
         name="get_current_shares_held",
         description="get current shares for a stock symbol",
     )
-    def get_current_shares_held(self, symbol: str) -> Annotated[int, float, "the output is a string"]:
+    def get_current_shares_held(self, symbol: str):
         stock_data = DAO.get_stock_position(symbol)
         
         if stock_data is None or stock_data.empty:
-            return 0, 0.0
-        
+            print(f"You have 0 shares of {symbol} stock, average acquisition price is 0.0")
+            return
+    
         total_quantity = stock_data['quantity'].sum()
         total_value = (stock_data['quantity'] * stock_data['buying_price']).sum()
         average_price = total_value / total_quantity if total_quantity > 0 else 0.0
-        
-        return total_quantity, average_price
+    
+        print(f"You have {total_quantity} shares of {symbol} stock, average acquisition price is {average_price:.2f}")
 
     @kernel_function(
-        name="get_current_cash_held",
-        description="get current remaining cash",
+        name="show_all_stock_positions",
+        description="display all stock positions",
     )
-    def get_current_cash_balance() -> Annotated[float, "the output is a string"]:
-        return DAO.get_remaining_cash()
+    def show_all_stock_positions(self):
+        stock_data = DAO.get_all_stocks()
 
-   
+        if stock_data is None or stock_data.empty:
+            print("You have no stock holdings.")
+            return
+
+        grouped_data = stock_data.groupby('symbol').agg({
+            'quantity': 'sum',
+            'buying_price': lambda x: (x * stock_data.loc[x.index, 'quantity']).sum() / stock_data.loc[x.index, 'quantity'].sum()
+        })
+
+        for symbol, row in grouped_data.iterrows():
+            total_quantity = row['quantity']
+            average_price = row['buying_price']
+            print(f"You have {total_quantity} shares of {symbol} stock, average acquisition price is {average_price:.2f}")

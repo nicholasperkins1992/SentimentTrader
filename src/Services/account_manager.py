@@ -5,8 +5,10 @@ from typing import Annotated
 from Services import DAO
 from semantic_kernel.functions import kernel_function
 
-CASH_POSITION_FILE = os.getenv("CASH_POSITION_FILE")
-STOCK_POSITION_FILE = os.getenv("STOCK_POSITION_FILE")
+# CASH_POSITION_FILE = os.getenv("CASH_POSITION_FILE")
+# STOCK_POSITION_FILE = os.getenv("STOCK_POSITION_FILE")
+CASH_POSITION_FILE = "CASH_POSITION_FILE"
+STOCK_POSITION_FILE = "STOCK_POSITION_FILE"
 
 class AccountManager: 
     
@@ -33,8 +35,9 @@ class AccountManager:
         if not os.path.exists(CASH_POSITION_FILE):
             DAO.init_cash_position()
         try:
-            df = DAO.get_remaining_cash
-            current_balance = df['cash_balance'].iloc[-1]
+            current_balance = DAO.get_remaining_cash()
+            print(f"aaaaaCurrent balance: {current_balance}")
+
         except (FileNotFoundError, IndexError):
             current_balance = 0
         
@@ -63,8 +66,7 @@ class AccountManager:
             raise ValueError("Withdrawal amount must be positive.")
         
         try:
-            df = pd.read_csv(CASH_POSITION_FILE)
-            current_balance = df['cash_balance'].iloc[-1]
+            current_balance = DAO.get_remaining_cash()
         except (FileNotFoundError, IndexError):
             raise Exception("No cash balance available.")
         
@@ -72,8 +74,17 @@ class AccountManager:
             raise Exception(f"Insufficient funds to withdraw ${amount:.2f}. Current balance: ${current_balance:.2f}")
         
         new_balance = current_balance - amount
-        data = {'date': [pd.Timestamp.now().strftime('%Y-%m-%d')], 'cash_balance': [new_balance]}
-        df_new = pd.DataFrame(data)
-        df_new.to_csv(CASH_POSITION_FILE, mode='a', header=False, index=False)
+        DAO.save_cash_position(new_balance)
         
         print(f"Withdrew ${amount:.2f} from the account. New balance: ${new_balance:.2f}")
+
+    @kernel_function(
+    name="show_cash",
+    description="show cash balance (cash position) in CSV."
+    )
+    def show_cash_balance(self):
+        """
+        show cash balance.
+        """
+        current_balance = DAO.get_remaining_cash()
+        print(f"aaaaaCurrent balance: {current_balance}")
