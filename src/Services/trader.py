@@ -1,6 +1,8 @@
-import DAO
 import pandas as pd
 from datetime import datetime
+from Services import DAO
+from typing import Annotated
+from semantic_kernel.functions import kernel_function
 
 class Trader: 
     
@@ -8,7 +10,10 @@ class Trader:
         name="buy_stock",
         description="buy stock",
     )
-    def buy_stock(self, symbol, price_per_share, quantity):
+    def buy_stock(self, 
+        symbol: int, 
+        price_per_share: Annotated[float, "trading price"],
+        quantity: Annotated[int, "quantity of stock"],):
         """
         record stock purchase action based on stock symbol, trading price and quantity 
 
@@ -20,7 +25,7 @@ class Trader:
         Returns:
         none.
         """
-        cash_balance = dao.get_remaining_cash()
+        cash_balance = DAO.get_remaining_cash()
         if cash_balance is None:
             raise Exception("No cash balance available.")
         
@@ -42,67 +47,61 @@ class Trader:
         name="sell_stock",
         description="sell stock",
     )
-    def sell_stock(self, symbol, quantity):
-        stock_data = dao.get_stock_position(symbol)
-        
-        if stock_data is None or stock_data.empty:
-            raise Exception(f"No shares of {symbol} available to sell.")
-        
-        total_quantity_held = stock_data['quantity'].sum()
-        
-        if total_quantity_held < quantity:
-            raise Exception(f"Not enough shares of {symbol} to sell. You only have {total_quantity_held} shares.")
-        
-        #first buy first sell, TODO: add sell specific share
-        stock_data = stock_data.sort_values(by='trading_date') 
-        
-        remaining_quantity = quantity
-        total_revenue = 0
-        
-        updated_rows = []
-        
-        for index, row in stock_data.iterrows():
-            available_quantity = row['quantity']
-            
-            if available_quantity >= remaining_quantity:
-                sell_quantity = remaining_quantity
-                remaining_quantity = 0
-            else:
-                sell_quantity = available_quantity
-                remaining_quantity -= sell_quantity
-            
-            total_revenue += sell_quantity * row['buying_price']
-            
-            if available_quantity > sell_quantity:
-                updated_rows.append({
-                    'trading_date': row['trading_date'],
-                    'symbol': row['symbol'],
-                    'quantity': available_quantity - sell_quantity,
-                    'buying_price': row['buying_price']
-                })
-            
-            if remaining_quantity == 0:
+    def sell_stock(self, symbol: str, quantityToSell: int, sellingPrice: float) -> Annotated[None, "No return value"]:
+        """
+        Sell the specified quantity of stock using FIFO (first in, first out) principle.
+
+        Parameters:
+        symbol (str): The stock symbol (e.g., "AAPL").
+        quantityToSell (int): The number of shares to sell.
+        sellingPrice (float): The price per share at which the stock is sold.
+
+        Raises:
+        Exception: If there are not enough shares available to sell.
+        """
+        # Step 1: Check if enough stock is available
+        stock_positions = self.dao.get_stock_position(symbol)
+        total_quantity = sum([row['quantity'] for row in stock_positions])
+
+        if total_quantity < quantityToSell:
+            raise Exception(f"Not enough {symbol} shares to sell. Available: {total_quantity}, Required: {quantityToSell}")
+
+        # Step 2: Sell stocks based on FIFO (earliest purchases first)
+        shares_to_sell = quantityToSell
+        for position in stock_positions:
+            if shares_to_sell <= 0:
                 break
-        
-        # update stock CSV
-        updated_df = pd.DataFrame(updated_rows)
-        dao.save_stock_position(symbol, updated_df)
-        
-        # update cash CSV
-        cash_balance = dao.get_remaining_cash()
-        new_cash_balance = cash_balance + total_revenue
-        dao.save_cash_position(new_cash_balance)
-        
-        print(f"Successfully sold {quantity} shares of {symbol}.")
-        print(f"New cash balance: ${new_cash_balance:.2f}")
 
+            # Get the current lot information
+            trading_date = position['trading_date']
+            quantity = position['quantity']
+            buying_price = position['buying_price']
 
+            if quantity > shares_to_sell:
+                # Partial sale from this lot, reduce the quantity
+                new_quantity = quantity - shares_to_sell
+                DAO.update_stock_position(trading_date, symbol, new_quantity, buying_price)  # Update the CSV for this lot
+                shares_to_sell = 0
+            else:
+                # Fully sell this lot, delete the row from CSV
+                DAO.delete_stock_position(trading_date, symbol)  # Delete this lot from CSV
+                shares_to_sell -= quantity
+
+        # Step 3: Update cash position CSV by adding the sale proceeds
+        sale_proceeds = quantityToSell * sellingPrice
+
+        current_cash = DAO.get_remaining_cash()  # Get the current cash balance
+        new_cash_position = current_cash + sale_proceeds
+        DAO.update_cash_position(new_cash_position)
+
+        print(f"Sold {quantityToSell} shares of {symbol} at ${sellingPrice:.2f} per share. Cash position updated.")
+        
     @kernel_function(
         name="get_current_shares_held",
         description="get current shares for a stock symbol",
     )
-    def get_current_shares_held(symbol) -> Annotated[int, float, "the output is a string"]:
-        stock_data = dao.get_stock_position(symbol)
+    def get_current_shares_held(self, symbol: str) -> Annotated[int, float, "the output is a string"]:
+        stock_data = DAO.get_stock_position(symbol)
         
         if stock_data is None or stock_data.empty:
             return 0, 0.0
@@ -118,4 +117,6 @@ class Trader:
         description="get current remaining cash",
     )
     def get_current_cash_balance() -> Annotated[float, "the output is a string"]:
-        return dao.get_remaining_cash()
+        return DAO.get_remaining_cash()
+
+   
