@@ -1,9 +1,10 @@
+import os
 from dotenv import load_dotenv
 from SentimentTraderAgent import AzureOpenAIClient
 
 load_dotenv()
-
-azure_client = AzureOpenAIClient(endpoint="https://ai-daschollai303201498064.openai.azure.com/openai/")
+endpoint = os.getenv("AZUREAI_ENDPOINT")
+azure_client = AzureOpenAIClient(endpoint=endpoint)
 
 while True:
         # Take input from the user
