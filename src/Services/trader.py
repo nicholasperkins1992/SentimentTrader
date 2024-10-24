@@ -2,6 +2,7 @@ import json
 import pandas as pd
 from datetime import datetime
 from Services import DAO
+from Services import stock
 from typing import Annotated
 from semantic_kernel.functions import kernel_function
 
@@ -13,7 +14,6 @@ class Trader:
     )
     def buy_stock(self, 
         symbol: str, 
-        price_per_share: Annotated[float, "trading price"],
         quantity: Annotated[int, "quantity of stock"],)-> Annotated[bool, "the output is a boolean, true if successful"]:
         """
         record stock purchase action based on stock ticker symbol, trading price and quantity 
@@ -30,6 +30,8 @@ class Trader:
         if cash_balance is None:
             raise Exception("No cash balance available.")
         
+        price_per_share = stock.get_stock_price_noKernel(symbol)
+
         total_cost = price_per_share * quantity
         
         if cash_balance < total_cost:
@@ -50,7 +52,7 @@ class Trader:
         name="sell_stock",
         description="Sell stock based on stock ticker symbol, quantity and selling price, for example 'Sell 10 shares of Apple at $150 each.'",
     )
-    def sell_stock(self, symbol: str, quantityToSell: int, sellingPrice: float)-> Annotated[bool, "the output is a boolean, true if successful"]:
+    def sell_stock(self, symbol: str, quantityToSell: int)-> Annotated[bool, "the output is a boolean, true if successful"]:
         """
         Sell the specified quantity of stock using FIFO (first in, first out) principle.
 
@@ -92,6 +94,7 @@ class Trader:
                 shares_to_sell -= quantity
 
         # Step 3: Update cash position CSV by adding the sale proceeds
+        sellingPrice = stock.get_stock_price_noKernel(symbol)
         sale_proceeds = quantityToSell * sellingPrice
 
         current_cash = DAO.get_remaining_cash()  # Get the current cash balance
