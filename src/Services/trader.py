@@ -50,7 +50,7 @@ class Trader:
         name="sell_stock",
         description="Sell stock based on stock ticker symbol, quantity and selling price, for example 'Sell 10 shares of Apple at $150 each.'",
     )
-    def sell_stock(self, symbol: str, quantityToSell: int, sellingPrice: float)-> Annotated[bool, "the output is a boolean, true if successful"]:
+    def sell_stock(self, symbol: str, quantityToSell: int, sellingPrice: float)-> Annotated[str, "the output is a string, true if successful"]:
         """
         Sell the specified quantity of stock using FIFO (first in, first out) principle.
 
@@ -64,7 +64,8 @@ class Trader:
         """
         # Step 1: Check if enough stock is available
         stock_positions = DAO.get_stock_position(symbol)
-
+        if stock_positions is None or stock_positions.empty:
+            return  "Could not sell stock, no shares of {symbol} available."
         total_quantity = stock_positions['quantity'].sum()
 
         if total_quantity < quantityToSell:
@@ -98,7 +99,7 @@ class Trader:
         new_cash_position = current_cash + sale_proceeds
         DAO.save_cash_position(new_cash_position)
         
-        return True
+        return "True"
 
         # print(f"Sold {quantityToSell} shares of {symbol} at ${sellingPrice:.2f} per share. Cash position updated.")
         
@@ -118,9 +119,9 @@ class Trader:
         average_price = total_value / total_quantity if total_quantity > 0 else 0.0
         
         data = {
-            "total_quantity": total_quantity,
+            "total_quantity": int(total_quantity),  # Convert to native Python int
             "symbol": symbol,
-            "average_price": round(average_price, 2)
+            "average_price": round(float(average_price), 2)  # Ensure average_price is a float
         }
         return json.dumps(data)
     
