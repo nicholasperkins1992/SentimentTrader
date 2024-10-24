@@ -28,10 +28,6 @@ class Stock:
         info = company.info
         return str(info.get('currentPrice'))
     
-    def get_stock_price_noKernel(self, ticker):
-        company = yf.Ticker(ticker)
-        info = company.info
-        return str(info.get('currentPrice'))
     
     # @kernel_function(
     #     name="get_text_from_url",
