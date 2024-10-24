@@ -11,11 +11,12 @@ def save_cash_position(cash_balance):
         'cash_balance': [cash_balance]
     }
     df = pd.DataFrame(data)
-    df.to_csv(CASH_POSITION_FILE, mode='a', index=False, header=False)
+    df.to_csv(CASH_POSITION_FILE, mode='w', index=False, header=True)
 
 def get_remaining_cash():
     try:
         cash_data = pd.read_csv(CASH_POSITION_FILE)
+        # print(cash_data['cash_balance'].iloc[-1])
         return cash_data['cash_balance'].iloc[-1]
     except FileNotFoundError:
         return 0  
@@ -28,11 +29,27 @@ def save_stock_position(symbol, quantity, price):
         'buying_price': [price]
     }
     df = pd.DataFrame(data)
-    df.to_csv(STOCK_POSITION_FILE, mode='a', index=False, header=False)
+
+    if not os.path.exists(STOCK_POSITION_FILE):
+        df.to_csv(STOCK_POSITION_FILE, mode='w', index=False, header=True)
+    else:
+        df.to_csv(STOCK_POSITION_FILE, mode='a', index=False, header=False)
+
+def update_stock_position(trading_date, symbol, new_quantity, buying_price):
+    df = pd.read_csv(STOCK_POSITION_FILE)
+
+#     # Update the specific row where symbol and trading_date match
+    df.loc[(df['trading_date'] == trading_date) & (df['symbol'] == symbol), 'quantity'] = new_quantity
+    df.to_csv(STOCK_POSITION_FILE, index=False)
 
 def get_stock_position(symbol):
     try:
-        stock_data = pd.read_csv(STOCK_POSITION_FILE)
+        dtype = {
+            'quantity': int,
+            'buying_price': float,
+            # Add other columns as needed
+        }
+        stock_data = pd.read_csv(STOCK_POSITION_FILE, dtype=dtype)
         stock = stock_data[stock_data['symbol'] == symbol]
         if not stock.empty:
             return stock  
@@ -47,3 +64,21 @@ def get_all_stocks():
         return stock_data  
     except FileNotFoundError:
         return pd.DataFrame()
+ 
+def delete_stock_position(trading_date, symbol):
+    df = pd.read_csv(STOCK_POSITION_FILE)
+
+    # Delete the row where symbol and trading_date match
+    df = df[~((df['trading_date'] == trading_date) & (df['symbol'] == symbol))]
+    df.to_csv(STOCK_POSITION_FILE, index=False)
+
+def init_cash_position():
+    data = {'date': [pd.Timestamp.now().strftime('%Y-%m-%d')], 'cash_balance': [0.00]}  # Initial balance $0
+    df = pd.DataFrame(data)
+    df.to_csv(CASH_POSITION_FILE, index=False)
+
+def init_stock_position():
+    data = {'trading_date': [], 'symbol': [], 'quantity': [], 'buying_price': []}
+    df = pd.DataFrame(data)
+    df.to_csv(STOCK_POSITION_FILE, index=False)
+    # print(f"Initialized {STOCK_POSITION_FILE} as an empty file.")
